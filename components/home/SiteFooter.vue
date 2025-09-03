@@ -14,11 +14,12 @@ const SOCIAL_ITEMS = [
   <ClientOnly>
     <footer
       v-arrow="{ speed1: '10s', color: 'white' }"
-      class="main-footer relative border-t border-t-webconf-gray bg-black"
+      class="main-footer relative border-t-[0.5px] border-webconf-gray/50 bg-black"
     >
       <div
-        class="container flex items-center justify-between px-20 pb-[60px] pt-[100px] text-white"
+        class="container relative flex items-end justify-between px-20 pb-[60px] pt-[100px] text-white"
       >
+        <ShareScrollToTopButton class="right-20 top-[100px]" />
         <div
           v-cursor="{ scale: 0.4, duration: 0.5 }"
           class="pic group flex flex-col gap-1"

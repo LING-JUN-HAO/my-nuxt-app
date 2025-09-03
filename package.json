@@ -55,6 +55,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.5",
     "nuxt": "^3.18.1",
+    "nuxt-marquee": "1.0.4",
     "nuxt-typed-router": "4.0.1",
     "prettier": "^3.6.2",
     "shadcn-nuxt": "^2.2.0",

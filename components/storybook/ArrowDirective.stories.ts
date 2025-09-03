@@ -38,6 +38,7 @@ export const Playground = {
       return { args }
     },
     template: `<div class="relative h-screen w-full bg-black pt-10 overflow-hidden flex flex-col gap-10">
+        <h1 class="text-center text-white font-bold bg-red-500 py-4">Tips：如果箭頭被蓋在下面多半是 overflow 導致出現新的堆疊上下文(用 overflow-clip 比較不會影響)</h1>
         <div>
           <p class="mb-6 text-white text-center text-xl">單一箭頭動畫(正向)</p>
           <div v-arrow="{ speed1: '10s', color: 'white' }" class="w-full h-[1px] bg-white" :class="'before:' + args.animation"></div>

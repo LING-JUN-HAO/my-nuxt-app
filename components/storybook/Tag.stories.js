@@ -21,7 +21,7 @@ export const Playground = {
     setup() {
       return { args }
     },
-    template: `<div class="bg-black w-screen h-screen p-8">    
+    template: `<div class="bg-black h-screen p-8">    
       <Tag :size="args.size">{{ args.default }}</Tag>
     </div>
     `,

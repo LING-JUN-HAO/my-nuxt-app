@@ -15,6 +15,7 @@ export default defineNuxtConfig({
     'nuxt-typed-router',
     'shadcn-nuxt',
     '@vueuse/nuxt',
+    'nuxt-marquee',
   ],
   css: ['@/assets/css/main.css'],
 
@@ -26,7 +27,9 @@ export default defineNuxtConfig({
         provider: 'google',
         weights: [400, 600],
         styles: ['normal'],
-        subsets: ['latin', 'latin-ext'],
+        subsets: ['chinese-traditional', 'latin'],
+        display: 'swap',
+        preload: true,
       },
     ],
   },
@@ -68,15 +71,7 @@ export default defineNuxtConfig({
 
   postcss: {
     plugins: {
-      tailwindcss: {
-        config: {
-          safelist: [
-            // 保留特定的 before: 動畫 class(搭配 storybook 使用)
-            'before:animate-arrow-run',
-            'before:animate-arrow-run-storybook',
-          ],
-        },
-      },
+      tailwindcss: {},
       autoprefixer: {},
       ...(process.env.NODE_ENV === 'production' && {
         cssnano: {

@@ -7,7 +7,7 @@
 
 <style>
 .cta-section {
-  background-image: url("/images/ctaBg.png");
+  background-image: url("/images/CTABg.png");
   background-size: cover;
   background-repeat: no-repeat;
   background-attachment: fixed;

@@ -85,7 +85,7 @@ export default defineNuxtConfig({
     publicAssets: [
       {
         baseURL: '/storybook',
-        dir: './storybook-static',
+        dir: '.public/storybook-static',
       },
     ],
   },

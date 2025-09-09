@@ -9,7 +9,7 @@
     "build": "storybook dev -p 6007",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
+    "preview": "storybook dev -p 6007",
     "postinstall": "nuxt prepare",
     "storybook": "storybook dev -p 6007",
     "build-storybook": "storybook build",

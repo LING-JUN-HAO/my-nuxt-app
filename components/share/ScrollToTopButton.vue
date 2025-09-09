@@ -2,6 +2,7 @@
 const lenis = useLenis()
 
 function scrollToTop() {
+  console.log('test')
   lenis.scrollTo(0)
 }
 </script>

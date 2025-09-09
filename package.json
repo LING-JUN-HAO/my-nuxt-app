@@ -6,14 +6,8 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "build": "storybook dev -p 6007",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "storybook dev -p 6007",
-    "postinstall": "nuxt prepare",
     "storybook": "storybook dev -p 6007",
     "build-storybook": "storybook build",
-    "build-all": "storybook dev -p 6007",
     "prepare": "husky install",
     "commit": "cz",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",

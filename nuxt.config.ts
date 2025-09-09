@@ -81,6 +81,22 @@ export default defineNuxtConfig({
     },
   },
 
+  nitro: {
+    publicAssets: [
+      {
+        baseURL: '/storybook',
+        dir: './storybook-static',
+      },
+    ],
+  },
+
+  routeRules: {
+    '/storybook/**': {
+      headers: { 'Content-Type': 'text/html' },
+      prerender: false,
+    },
+  },
+
   site,
   ogImage,
 })

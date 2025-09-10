@@ -5,7 +5,7 @@ export default {
   component: CursorDot,
   argTypes: {
     speed: {
-      control: { type: 'range', min: 0.01, max: 0.3, step: 0.01 },
+      control: { type: 'range', min: 0.01, max: 1, step: 0.01 },
     },
   },
 }

@@ -61,6 +61,8 @@ export default defineNuxtConfig({
 
   image: {
     provider: 'ipx',
+    quality: 75,
+    format: ['webp', 'png'],
     ipx: {
       maxAge: 60 * 60 * 24 * 30,
     },
@@ -68,6 +70,7 @@ export default defineNuxtConfig({
 
   vite: {
     build: {
+      sourcemap: true,
       rollupOptions: {
         output: {
           manualChunks: {
@@ -109,6 +112,7 @@ export default defineNuxtConfig({
   },
 
   nitro: {
+    sourceMap: true,
     // 啟用頁面預渲染
     prerender: {
       routes: [
@@ -117,6 +121,12 @@ export default defineNuxtConfig({
         '/sponsors',
         '/coming-soon',
       ],
+    },
+    routeRules: {
+      // IPX 處理的圖片路徑(背景圖片使用)
+      '/_ipx/**': {
+        headers: { 'Cache-Control': 'public, max-age=2592000, public, s-maxage=2592000' },
+      },
     },
     compressPublicAssets: {
       gzip: true,

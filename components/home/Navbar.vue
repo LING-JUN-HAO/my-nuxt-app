@@ -89,6 +89,7 @@ onUnmounted(() => {
           to="/"
           aria-label="回到首頁"
           class="group relative inline-block"
+          @click="closeMenu"
         >
           <!-- default logo -->
           <NuxtImg

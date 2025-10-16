@@ -121,9 +121,14 @@ export default defineNuxtConfig({
       ],
     },
     routeRules: {
-      // IPX 處理的圖片路徑(背景圖片使用)
+      // 原始圖片路徑快取 (包含 heroBg.webp)
+      '/images/**': {
+        headers: { 'Cache-Control': 'public, max-age=2592000, s-maxage=2592000' },
+      },
+
+      // IPX 處理的圖片路徑
       '/_ipx/**': {
-        headers: { 'Cache-Control': 'public, max-age=2592000, public, s-maxage=2592000' },
+        headers: { 'Cache-Control': 'public, max-age=2592000, s-maxage=2592000' },
       },
     },
     compressPublicAssets: {

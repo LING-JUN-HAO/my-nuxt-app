@@ -36,7 +36,7 @@ const SOCIAL_ITEMS = [
           >
             <!-- default logo -->
             <NuxtImg
-              src="/images/footerLogo.webp"
+              src="/images/footerLogo22.webp"
               alt="2025 WebConf"
               width="280"
               height="106"

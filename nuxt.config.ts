@@ -61,6 +61,7 @@ export default defineNuxtConfig({
 
   image: {
     provider: 'ipx',
+    fs: { dir: 'public' },
     ipx: {
       maxAge: 60 * 60 * 24 * 30,
     },
@@ -121,7 +122,7 @@ export default defineNuxtConfig({
       ],
     },
     routeRules: {
-      // 原始圖片路徑快取 (包含 heroBg.webp)
+      // 原始圖片路徑快取(背景圖片使用)
       '/images/**': {
         headers: { 'Cache-Control': 'public, max-age=2592000, s-maxage=2592000' },
       },

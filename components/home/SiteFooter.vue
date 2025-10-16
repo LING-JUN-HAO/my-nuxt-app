@@ -40,6 +40,7 @@ const SOCIAL_ITEMS = [
               alt="2025 WebConf"
               width="280"
               height="106"
+              format="webp"
               class="opacity-100 transition-opacity duration-500 lg:group-hover:opacity-0"
             />
             <!-- hover logo -->

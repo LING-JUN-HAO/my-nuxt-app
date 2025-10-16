@@ -61,8 +61,6 @@ export default defineNuxtConfig({
 
   image: {
     provider: 'ipx',
-    quality: 75,
-    format: ['webp', 'png'],
     ipx: {
       maxAge: 60 * 60 * 24 * 30,
     },

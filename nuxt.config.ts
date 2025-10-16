@@ -63,7 +63,7 @@ export default defineNuxtConfig({
     provider: 'ipx',
     fs: { dir: 'public' },
     ipx: {
-      maxAge: 60 * 60 * 24 * 30,
+      maxAge: 0,
     },
   },
 
@@ -124,12 +124,12 @@ export default defineNuxtConfig({
     routeRules: {
       // 原始圖片路徑快取(背景圖片使用)
       '/images/**': {
-        headers: { 'Cache-Control': 'public, max-age=2592000, s-maxage=2592000' },
+        headers: { 'Cache-Control': 'public, max-age=0, s-maxage=0' },
       },
 
       // IPX 處理的圖片路徑
       '/_ipx/**': {
-        headers: { 'Cache-Control': 'public, max-age=2592000, s-maxage=2592000' },
+        headers: { 'Cache-Control': 'public, max-age=0, s-maxage=0' },
       },
     },
     compressPublicAssets: {

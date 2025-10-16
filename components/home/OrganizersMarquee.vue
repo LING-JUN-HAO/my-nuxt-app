@@ -61,7 +61,10 @@ const ORGANIZERS = [
           format="webp"
           width="150"
           class="aspect-[5/4] w-[96px] transition-opacity duration-300 sm:w-[120px] lg:w-[150px] lg:group-hover:opacity-0"
-          @error="console.log('Image load error:', $event)"
+          @error="
+            (event) =>
+              ((event.target as HTMLImageElement).src = '/images/test.jpg')
+          "
         />
         <NuxtImg
           :src="organizer.hoverLogo"
@@ -69,7 +72,10 @@ const ORGANIZERS = [
           format="webp"
           width="150"
           class="absolute inset-0 aspect-[5/4] w-[96px] opacity-0 transition-opacity duration-300 sm:w-[120px] lg:w-[150px] lg:group-hover:opacity-100"
-          @error="console.log('Image load error:', $event)"
+          @error="
+            (event) =>
+              ((event.target as HTMLImageElement).src = '/images/test.jpg')
+          "
         />
         <span
           v-if="organizer.consecutiveText !== ''"

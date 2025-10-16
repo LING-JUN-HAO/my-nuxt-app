@@ -95,7 +95,6 @@ onUnmounted(() => {
           <NuxtImg
             src="/images/headerLogo.webp"
             alt="2025 WebConf"
-            format="webp"
             width="191"
             height="28"
             class="h-5 w-[137px] opacity-100 transition-opacity duration-500 sm:h-[28px] sm:w-[191px] lg:group-hover:opacity-0"
@@ -104,7 +103,6 @@ onUnmounted(() => {
           <NuxtImg
             src="/images/headerLogoHover.webp"
             alt="2025 WebConf"
-            format="webp"
             width="191"
             height="28"
             class="absolute inset-0 h-5 w-[137px] opacity-0 transition-opacity duration-500 sm:h-[28px] sm:w-[191px] lg:group-hover:opacity-100"

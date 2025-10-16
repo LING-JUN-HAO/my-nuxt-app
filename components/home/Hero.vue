@@ -722,7 +722,6 @@ useHead({
           <NuxtImg
             src="/images/heroLogo.webp"
             alt="2025 WebConf Logo"
-            format="webp"
             width="570"
             height="215"
             class="mr-0 md:mr-[86px] md:w-[570px]"

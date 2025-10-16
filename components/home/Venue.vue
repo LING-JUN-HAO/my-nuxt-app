@@ -469,7 +469,6 @@
             alt="WebConf 2025 場地地圖"
             width="793"
             height="536"
-            format="webp"
             fit="contain"
             class="size-full translate-y-0 object-contain"
           />
@@ -484,7 +483,6 @@
         <NuxtImg
           src="/images/venueCompass.webp"
           alt="指北針圖示"
-          format="webp"
           width="161"
           height="117"
           class="absolute right-0 top-12 hidden sm:block"

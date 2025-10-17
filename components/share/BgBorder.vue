@@ -3,6 +3,7 @@ import type p5 from 'p5'
 import { useBreakpoints, useThrottleFn } from '@vueuse/core'
 
 const props = withDefaults(defineProps<Props>(), {
+  borderColor: '#E6E6E6',
   dvdDotSpeed: 1,
   dvdDotColors: () => ['#2F2ADB', '#919191', '#E6E6E6'] as const,
 })
@@ -12,6 +13,7 @@ const breakpoints = useBreakpoints({
 const isDesktop = breakpoints.greaterOrEqual('lg')
 
 interface Props {
+  borderColor?: string
   dvdDotSpeed?: number
   dvdDotColors?: [string, string, string]
 }
@@ -45,54 +47,41 @@ let r: number // flashlight 半徑
 
 const defaultColors = {
   primary: '#4a90ff', // 方框預設顏色
-  topGrid: '#E6E6E6', // 上層灰網格顏色
+  topGrid: props.borderColor, // 上層灰網格顏色
   bottomGrid: '#002EFF', // 下層藍網格顏色
 }
 
 const dvdDotSize = 20
 const headerOffset = 58 // 對應 h-[58px] 的高度偏移
+const p5InstanceRef = ref<p5 | null>(null)
 
 watch(
   () => props.dvdDotSpeed,
   (newSpped) => {
-    dvdDots.forEach((dot) => {
+    for (const dot of dvdDots) {
       const speed = newSpped || 4
       dot.vx = dot.vx < 0 ? -Math.abs(speed) : Math.abs(speed)
       dot.vy = dot.vy < 0 ? -Math.abs(speed) : Math.abs(speed)
-    })
+    }
   },
 )
 
-function setCSSVariables(p: p5) {
-  const diff = ((p.windowWidth - 1440) / 100) * 0.8
-  const diff2 = ((p.windowWidth - 1440) / 100) * 0.2
-  const diff3 = ((p.windowWidth - 1440) / 100) * 0.1
-  const diff4 = ((p.windowWidth - 1440) / 100) * 0.4
-  const diff6 = ((p.windowWidth - 1440) / 100) * 0.6
-  const diff7 = ((p.windowWidth - 1440) / 100) * 0.7
-
-  const cssUpdates = [
-    ['--grid-size', `${gridSize}px`],
-    ['--grid-diff', diff.toString()],
-    ['--grid-diff-2', diff2.toString()],
-    ['--grid-diff-3', diff3.toString()],
-    ['--grid-diff-4', diff4.toString()],
-    ['--grid-diff-6', diff6.toString()],
-    ['--grid-diff-7', diff7.toString()],
-  ] as const
-
-  requestAnimationFrame(() => {
-    cssUpdates.forEach(([property, value]) => {
-      document.documentElement.style.setProperty(property, value)
-    })
-  })
-}
+watch(
+  () => props.borderColor,
+  (newColor) => {
+    defaultColors.topGrid = newColor
+    if (topLayer && p5InstanceRef.value) {
+      const p = p5InstanceRef.value
+      drawGrid(p, topLayer, p.color(newColor), 0.5, 1.5)
+    }
+  },
+)
 
 function drawGrid(
   p: p5,
   pg: p5.Graphics,
   lineCol: p5.Color,
-  alpha: number = 1.0,
+  alpha: number = 1,
   customStrokeWeight?: number,
 ) {
   if (!pg)
@@ -151,7 +140,7 @@ function initializeLayersSync(p: p5) {
     tempLayer = null
   }
 
-  if (typeof p.width === 'undefined' || typeof p.height === 'undefined')
+  if (p.width === undefined || p.height === undefined)
     return
 
   // 建立三層畫布
@@ -166,15 +155,16 @@ function initializeLayersSync(p: p5) {
   const { topGrid, bottomGrid } = defaultColors
 
   // 繪製底層藍色網格（完全不透明）
-  drawGrid(p, bottomLayer, p.color(bottomGrid), 1.0, 1.5)
+  drawGrid(p, bottomLayer, p.color(bottomGrid), 1, 1.5)
 
   // 繪製上層灰色網格（半透明）
-  drawGrid(p, topLayer, p.color(topGrid), 0.5, 0.5)
+  drawGrid(p, topLayer, p.color(topGrid), 0.5, 1.5)
 }
 
 // p5 網格背景程式
 function gridSketch(p: p5) {
   p.setup = () => {
+    p5InstanceRef.value = p
     const canvas = p.createCanvas(p.windowWidth, p.windowHeight, 'p2d')
     canvas.id('gridCanvas')
     canvas.parent(gridContainer.value!)
@@ -183,7 +173,6 @@ function gridSketch(p: p5) {
     // 計算 gridSize 和設置 CSS 變數
     gridSize = FIXED_GRID_SIZE.value
     gridSizeRef.value = gridSize
-    setCSSVariables(p)
 
     // 初始化 flashlight 參數
     r = isDesktop.value ? Math.min(p.width, p.height) * 0.25 : 0
@@ -226,8 +215,8 @@ function gridSketch(p: p5) {
         ctx.save()
         ctx.globalCompositeOperation = 'destination-out'
         const gradient = ctx.createRadialGradient(mx, my, 0, mx, my, r)
-        gradient.addColorStop(0.0, 'rgba(0,0,0,1)')
-        gradient.addColorStop(1.0, 'rgba(0,0,0,0)')
+        gradient.addColorStop(0, 'rgba(0,0,0,1)')
+        gradient.addColorStop(1, 'rgba(0,0,0,0)')
         ctx.fillStyle = gradient
 
         ctx.beginPath()
@@ -245,7 +234,6 @@ function gridSketch(p: p5) {
     p.resizeCanvas(p.windowWidth, p.windowHeight)
     gridSize = FIXED_GRID_SIZE.value
     gridSizeRef.value = gridSize
-    setCSSVariables(p)
 
     if (
       topLayer
@@ -265,8 +253,8 @@ function gridSketch(p: p5) {
       || !topLayer
       || !bottomLayer
       || !tempLayer
-      || typeof p.width === 'undefined'
-      || typeof p.height === 'undefined'
+      || p.width === undefined
+      || p.height === undefined
     ) {
       return
     }
@@ -280,8 +268,8 @@ function gridSketch(p: p5) {
       || !topLayer
       || !bottomLayer
       || !tempLayer
-      || typeof p.width === 'undefined'
-      || typeof p.height === 'undefined'
+      || p.width === undefined
+      || p.height === undefined
     ) {
       return
     }
@@ -303,11 +291,7 @@ function boxSketch(p: p5) {
   }
 
   p.draw = () => {
-    if (
-      !p
-      || typeof p.width === 'undefined'
-      || typeof p.height === 'undefined'
-    ) {
+    if (!p || p.width === undefined || p.height === undefined) {
       return
     }
 
@@ -348,13 +332,13 @@ function createDVDDots(p: p5) {
 
 // 更新和繪製 DVD 點
 function updateAndDrawDVDDots(p: p5) {
-  if (!p || typeof p.width === 'undefined' || typeof p.height === 'undefined') {
+  if (!p || p.width === undefined || p.height === undefined) {
     return
   }
 
   const buffer = 20
 
-  dvdDots.forEach((dot) => {
+  for (const dot of dvdDots) {
     // 先更新位置
     dot.x += dot.vx
     dot.y += dot.vy
@@ -391,7 +375,7 @@ function updateAndDrawDVDDots(p: p5) {
     }
 
     drawGlowingBox(p, dot.x, dot.y, dot.size, dot.color)
-  })
+  }
 }
 
 // 繪製方框

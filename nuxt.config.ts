@@ -132,7 +132,6 @@ export default defineNuxtConfig({
         '/agenda',
         '/sponsors',
         '/coming-soon',
-        ...Array.from({ length: 32 }, (_, i) => `/agenda?speakerId=${i + 1}`),
       ],
     },
     routeRules: {

@@ -99,20 +99,16 @@ const { data: allSpeakers } = await useAsyncData('all-speakers', () =>
   queryCollection('content').all())
 
 const currentSpeaker = computed(() => {
-  console.log('allSpeakers', allSpeakers.value)
   const speakerIds
     = typeof route.query.speakerId === 'string'
       ? [route.query.speakerId]
       : route.query.speakerId
-  console.log('Current speakerId from route:', speakerIds)
   if (!speakerIds || !allSpeakers.value)
     return null
 
   const findSpeakerInfos = allSpeakers.value.filter(speaker =>
     speakerIds?.includes(speaker.meta.speakerId as string),
   )
-
-  console.log('Found speaker infos:', findSpeakerInfos)
   return findSpeakerInfos
 })
 

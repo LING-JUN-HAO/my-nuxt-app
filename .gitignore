@@ -26,9 +26,13 @@ logs
 *storybook.log
 storybook-static
 
+.cursorignore
+
+stats
+
 # Storybook example assets
 components/assets/*.png
 components/assets/*.svg
 components/assets/*.avif
 components/assets/*.jpg
-components/assets/*.jpeg
+components/assets/*.jpeg 

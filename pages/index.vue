@@ -1,18 +1,34 @@
+<script setup lang="ts">
+import {
+  eventBasic,
+  eventLocation,
+  eventOffers,
+  eventOrganizer,
+  eventPerformers,
+} from '~/config/seo.config'
+
+useSchemaOrg([
+  eventOrganizer,
+  eventLocation,
+  ...eventPerformers,
+  {
+    ...eventBasic,
+    location: { '@id': 'https://webconf.tw/#location' },
+    organizer: { '@id': 'https://webconf.tw/#organization' },
+    offers: eventOffers,
+  },
+])
+</script>
+
 <template>
-  <ShareBgBorder>
-    <HomeNavbar />
+  <div>
     <HomeHero />
-    <div
-      id="about-section"
-      class="relative z-0 min-h-screen w-full"
-    >
-      <HomeAbout />
-    </div>
+    <HomeAbout />
     <HomeFeaturedSpeakers />
     <HomeVenue />
     <HomeOrganizersMarquee />
     <HomeCTA />
     <HomeCocNotice />
-    <HomeSiteFooter />
-  </ShareBgBorder>
+    <HomeAnnouncementBar />
+  </div>
 </template>

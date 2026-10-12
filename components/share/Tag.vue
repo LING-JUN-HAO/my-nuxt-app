@@ -1,6 +1,6 @@
 <script setup lang="ts">
 interface Props {
-  size?: ['md', 'lg'][number]
+  size?: ['xl', 'md', 'lg'][number]
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -8,7 +8,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const tagClass = computed(() => {
-  return props.size === 'md' ? 'tag-md' : 'tag-lg'
+  return `tag-${props.size}`
 })
 </script>
 
@@ -21,12 +21,16 @@ const tagClass = computed(() => {
   </span>
 </template>
 
-<style>
+<style scoped>
 .tag-md {
   @apply px-5 py-2;
 }
 
 .tag-lg {
+  @apply px-4 py-2 sm:px-6;
+}
+
+.tag-xl {
   @apply px-10 py-2;
 }
 </style>

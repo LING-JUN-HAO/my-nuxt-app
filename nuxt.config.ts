@@ -1,9 +1,11 @@
-import { ogImage, site } from './config/seo.config'
+import { visualizer } from 'rollup-plugin-visualizer'
+import { site, sitemap } from './config/seo.config'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
+  devtools: { enabled: false },
+
   modules: [
     '@nuxtjs/storybook',
     '@nuxtjs/tailwindcss',
@@ -13,11 +15,41 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     '@nuxt/scripts',
     'nuxt-typed-router',
-    'shadcn-nuxt',
     '@vueuse/nuxt',
     'nuxt-marquee',
+    '@nuxt/content',
+    'nuxt-toast',
+    '@nuxtjs/device',
   ],
   css: ['@/assets/css/main.css'],
+
+  features: {
+    inlineStyles: false,
+  },
+
+  // nuxt-content 相關生成設定(a 標籤外部連結自動開啟新分頁)
+  content: {
+    build: {
+      markdown: {
+        rehypePlugins: {
+          'rehype-external-links': {
+            options: {
+              target: '_blank',
+              rel: ['noopener', 'noreferrer'],
+            },
+          },
+        },
+      },
+    },
+  },
+
+  // nuxt-icon 自定義圖標設定
+  icon: {
+    customCollections: [{
+      prefix: 'custom-icon',
+      dir: './public/images/icon',
+    }],
+  },
 
   // Google Fonts 設定
   fonts: {
@@ -25,11 +57,19 @@ export default defineNuxtConfig({
       {
         name: 'Noto Sans TC',
         provider: 'google',
-        weights: [400, 600],
+        weights: [400, 600, 700],
         styles: ['normal'],
-        subsets: ['chinese-traditional', 'latin'],
+        subsets: ['chinese-traditional'],
         display: 'swap',
         preload: true,
+      },
+      // izitoast CSS 使用 Lato，明確設定讓 @nuxt/fonts 以 woff2 下載，覆蓋自動發現的 .woff 版本
+      {
+        name: 'Lato',
+        provider: 'google',
+        weights: [400],
+        styles: ['normal', 'italic'],
+        display: 'swap',
       },
     ],
   },
@@ -39,8 +79,11 @@ export default defineNuxtConfig({
   app: {
     head: {
       link: [
-        { rel: 'icon', href: 'https://webconf.tw/favicon.ico', sizes: 'any' }, // 絕對路徑
-        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' }, // 絕對路徑，Apple 設備加入主畫面的圖片
+        { rel: 'icon', href: 'https://webconf.tw/images/seo/favicon.ico?v=2025' },
+        { rel: 'apple-touch-icon', href: 'https://webconf.tw/images/seo/appleTouchIcon.png?v=2025' },
+      ],
+      meta: [
+        { name: 'theme-color', content: 'black' },
       ],
     },
     pageTransition: {
@@ -53,20 +96,41 @@ export default defineNuxtConfig({
     transpile: ['gsap'],
   },
 
+  image: {
+    provider: 'ipx',
+    ipx: {
+      maxAge: 60 * 60 * 24 * 30,
+    },
+  },
+
   vite: {
     build: {
       rollupOptions: {
         output: {
           manualChunks: {
             'gsap': ['gsap'],
-            'lottie': ['lottie-web'],
             'lenis': ['lenis'],
+            'p5-vendor': ['p5'],
             'vue-vendor': ['vue', 'vue-router'],
           },
         },
       },
       chunkSizeWarningLimit: 1000,
     },
+    optimizeDeps: {
+      exclude: ['lottie-web'],
+    },
+    plugins: process.env.NODE_ENV === 'production'
+      ? [
+          visualizer({
+            filename: 'stats/client.html',
+            template: 'treemap',
+            gzipSize: true,
+            brotliSize: true,
+            open: true,
+          }) as any,
+        ]
+      : [],
   },
 
   postcss: {
@@ -82,21 +146,39 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    publicAssets: [
-      {
-        baseURL: '/storybook',
-        dir: '.public/storybook-static',
+    // 啟用頁面預渲染
+    prerender: {
+      routes: [
+        '/',
+        '/agenda',
+        '/speakers',
+        '/sponsors',
+        '/staff',
+        '/history',
+        ...Array.from({ length: 43 }, (_, i) => `/agenda/${i + 1}`),
+        ...Array.from({ length: 44 }, (_, i) => `/speakers/${i + 1}`),
+        '/agenda/3/4',
+        '/agenda/33/34',
+        '/agenda/00/23/24',
+      ],
+    },
+    routeRules: {
+      // 原始圖片路徑快取(背景圖片使用)
+      '/images/**': {
+        headers: { 'Cache-Control': 'public, max-age=2592000, s-maxage=2592000' },
       },
-    ],
-  },
 
-  routeRules: {
-    '/storybook/**': {
-      headers: { 'Content-Type': 'text/html' },
-      prerender: false,
+      // IPX 處理的圖片路徑
+      '/_ipx/**': {
+        headers: { 'Cache-Control': 'public, max-age=2592000, s-maxage=2592000' },
+      },
+    },
+    compressPublicAssets: {
+      gzip: true,
+      brotli: true,
     },
   },
 
   site,
-  ogImage,
+  sitemap,
 })

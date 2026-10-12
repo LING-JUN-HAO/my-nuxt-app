@@ -4,22 +4,23 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  speed: 0.25,
+  speed: 1,
 })
 
-const speed = computed(() => props.speed ?? 0.045)
-
-const gsap = useGsap()
+const { gsap } = useGsap()
 const { x: mouseX, y: mouseY } = useMouse({ type: 'client' })
 
-const cursorPosition = reactive({ x: 0, y: 0 })
+const cursorPosition = { x: 0, y: 0 }
 const cursorRef = ref<HTMLElement | null>(null)
+const device = useDevice()
 
-let setX: (_value: number) => void = () => {}
-let setY: (_value: number) => void = () => {}
+const showCursor = computed(() => device.isDesktop)
+
+let setX: (_value: number) => void
+let setY: (_value: number) => void
 
 onMounted(() => {
-  if (!cursorRef.value || !gsap)
+  if (!gsap || !showCursor.value)
     return
 
   setX = gsap.quickSetter(cursorRef.value, 'x', 'px') as (
@@ -30,8 +31,8 @@ onMounted(() => {
   ) => void
 
   const ticker = () => {
-    cursorPosition.x += (mouseX.value - cursorPosition.x) * speed.value
-    cursorPosition.y += (mouseY.value - cursorPosition.y) * speed.value
+    cursorPosition.x += (mouseX.value - cursorPosition.x) * props.speed
+    cursorPosition.y += (mouseY.value - cursorPosition.y) * props.speed
 
     setX(cursorPosition.x)
     setY(cursorPosition.y)
@@ -47,9 +48,10 @@ onMounted(() => {
 
 <template>
   <div
+    v-if="showCursor"
     ref="cursorRef"
     data-cursor
-    class="pointer-events-none fixed left-0 top-0 z-[9999] grid size-5 -translate-x-1/2 -translate-y-1/2 place-content-center will-change-transform"
+    class="pointer-events-none fixed left-0 top-0 z-[150] grid size-5 -translate-x-1/2 -translate-y-1/2 place-content-center will-change-transform"
   >
     <div
       data-cursor-inner

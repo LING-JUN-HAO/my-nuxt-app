@@ -1,6 +1,6 @@
 <template>
   <div
-    class="gradient-dots-card border-[0.5px] border-webconf-gray bg-black px-[60px] py-12"
+    class="gradient-dots-card border-[0.5px] border-x-0 border-webconf-frame bg-black px-5 pb-10 pt-8 sm:border-x-[0.5px] sm:p-12 lg:px-[60px] lg:py-12"
   >
     <slot></slot>
   </div>
@@ -9,8 +9,14 @@
 <style scoped>
 .gradient-dots-card {
   background-image: url("/images/gradientDotsBg.webp");
-  background-size: contain;
+  background-size: auto 215px;
   background-position: bottom;
   background-repeat: no-repeat;
+}
+
+@media (min-width: 640px) {
+  .gradient-dots-card {
+    background-size: 100% 215px;
+  }
 }
 </style>

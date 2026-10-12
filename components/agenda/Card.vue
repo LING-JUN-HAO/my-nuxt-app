@@ -1,0 +1,175 @@
+<script setup lang="ts">
+import type { AgendaItem, AgendaTag } from '~/types'
+
+const props = defineProps<{
+  data: AgendaItem
+  index: number
+  time?: string
+  showTime?: boolean
+  isSelected: boolean
+  selectedTags: AgendaTag[]
+}>()
+
+const emit = defineEmits<{
+  tagClick: [tag: AgendaTag]
+}>()
+
+const { setToggleModal } = useGlobalState()
+
+const cardLink = computed(() => {
+  if (props.data.speakerInfo && props.data.speakerInfo.length > 0) {
+    const speakerIds = props.data.speakerInfo.map(s => s.speakerId).join('/')
+    return `/agenda/${speakerIds}`
+  }
+
+  return '/agenda'
+})
+
+function handleCardClick(event: MouseEvent) {
+  // 如果點擊的是按鈕，不執行 modal 開啟
+  const target = event.target as HTMLElement
+
+  if (target.closest('button')) {
+    event.preventDefault()
+    return
+  }
+
+  setToggleModal(true)
+}
+</script>
+
+<template>
+  <ShareGridCard
+    :is-selected="isSelected"
+    :fill-effect="true"
+    :show-square="true"
+    :show-right-border="index !== 2"
+  >
+    <!-- 時間標記 (桌面版) -->
+    <div
+      v-if="showTime"
+      class="sticky top-[124px] z-[5] ml-[-86px] hidden h-7 w-[86px] items-center justify-center bg-webconf-gray text-btn-16 text-webconf-blue lg:flex"
+    >
+      {{ time }}
+    </div>
+
+    <NuxtLink
+      v-cursor="{
+        scale: 0.5,
+        duration: 0.5,
+      }"
+      class="group relative flex h-full flex-col px-5 py-8 text-left transition-colors duration-300 lg:overflow-visible lg:px-8 xl:min-h-[285px] xl:px-10"
+      :class="{
+        'lg:-mt-7': showTime,
+      }"
+      :to="cardLink"
+      @click="handleCardClick"
+    >
+      <div class="grow">
+        <div>
+          <span
+            v-if="data.isCoStream"
+            class="float-left mr-3 shrink-0 bg-webconf-gray px-3 py-[6px] text-center text-body-16 font-semibold leading-none text-webconf-blue"
+          >
+            聯播
+          </span>
+
+          <h2 class="-mt-1 text-h4-24 leading-[1.4]">
+            {{ data.title }}
+          </h2>
+        </div>
+
+        <ul
+          v-if="data.tags"
+          class="relative z-[5] mt-3 flex flex-wrap items-start gap-2 lg:mt-4"
+        >
+          <li
+            v-for="tag in data.tags"
+            :key="`${data.title}-${tag}`"
+          >
+            <button
+              type="button"
+              :class="{
+                'border-webconf-gray bg-webconf-gray text-webconf-blue':
+                  selectedTags.includes(tag),
+              }"
+              class="relative border border-webconf-blue px-4 py-[6px] text-xs leading-[1.4] tracking-[0.02em] transition-colors duration-300 group-hover:border-webconf-gray hover:border-webconf-blue hover:bg-white hover:text-webconf-blue"
+              @click.stop.prevent="emit('tagClick', tag)"
+            >
+              {{ tag }}
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div
+        class="mt-6 flex items-end justify-between"
+        :class="{
+          'lg:z-10': isSelected,
+        }"
+      >
+        <div class="flex items-end gap-3">
+          <!-- 講者頭像 -->
+          <div class="flex shrink-0 gap-2">
+            <div
+              v-for="(speaker, idx) in data.speakerInfo"
+              :key="speaker.name"
+              class="relative"
+              :style="{
+                transform:
+                  data.speakerInfo?.length && data.speakerInfo.length > 2
+                    ? `translateX(${-50 * idx}%)`
+                    : undefined,
+              }"
+            >
+              <NuxtImg
+                :src="speaker.avatarUrl"
+                :alt="speaker.name"
+                width="43"
+                height="60"
+                placeholder
+              />
+              <ShareNoiseMask />
+            </div>
+          </div>
+
+          <!-- 講者名稱 -->
+          <div
+            class="flex min-w-[50%] flex-col flex-wrap items-center gap-1 lg:flex-row lg:gap-[6px]"
+            :class="{
+              'ml-[-43px]':
+                data.speakerInfo?.length && data.speakerInfo.length > 2,
+            }"
+          >
+            <template
+              v-for="(speaker, idx) in data.speakerInfo"
+              :key="speaker.name"
+            >
+              <p class="text-body-16">
+                {{ speaker.name }}
+              </p>
+              <p
+                v-if="data.speakerInfo && idx < data.speakerInfo.length - 1"
+                class="hidden text-[#999] lg:block"
+              >
+                |
+              </p>
+            </template>
+          </div>
+        </div>
+
+        <!-- 地點 (行動版) -->
+        <div class="flex items-center gap-1 text-body-18 lg:hidden">
+          <NuxtImg
+            src="/images/icon/location.svg"
+            alt="location"
+            width="20"
+            height="20"
+            placeholder
+          />
+          {{ data.location }}
+        </div>
+      </div>
+    </NuxtLink>
+  </ShareGridCard>
+</template>

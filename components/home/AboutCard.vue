@@ -1,72 +1,147 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from 'vue'
-
-const gsap = useGsap()
+const { gsap, ScrollTrigger } = useGsap()
+const { width } = useWindowSize()
 const aboutCardRef = ref<any>(null)
 
-onMounted(() => {
-  nextTick()
+let matchMedia: gsap.MatchMedia | null = null
+let resizeTimeout: NodeJS.Timeout | null = null
 
-  const element = aboutCardRef.value.$el
+function cleanupAnimations() {
+  if (matchMedia) {
+    matchMedia.revert()
+    matchMedia = null
+  }
+}
 
-  if (!element)
+function initPinEffect() {
+  // 清理舊的動畫
+  cleanupAnimations()
+
+  if (!aboutCardRef.value?.$el)
     return
 
-  gsap.to(element, {
-    scrollTrigger: {
-      trigger: element,
-      start: 'center center',
-      endTrigger: '#about-section', // 指定 pages/index.vue 的 #about-section 元素
-      end: 'bottom bottom',
-      pin: element,
-      pinSpacing: false,
-    },
+  // 使用 GSAP matchMedia 處理響應式
+  matchMedia = gsap.matchMedia()
+
+  if (!matchMedia)
+    return
+
+  // 只在 sm 以上啟動 pin 效果
+  matchMedia.add('(min-width: 640px)', () => {
+    const element = aboutCardRef.value.$el
+
+    gsap.to(element, {
+      scrollTrigger: {
+        trigger: element,
+        start: 'center center',
+        endTrigger: '#about-section',
+        end: 'bottom bottom',
+        pin: element,
+        pinSpacing: false,
+        scrub: 2,
+        anticipatePin: 1,
+      },
+    })
+
+    // 清理函數會自動被 matchMedia.revert() 呼叫
+    return () => {
+      ScrollTrigger.getAll().forEach((trigger) => {
+        if (trigger.trigger === element) {
+          trigger.kill()
+        }
+      })
+    }
   })
+}
+
+function handleResize() {
+  if (resizeTimeout) {
+    clearTimeout(resizeTimeout)
+  }
+
+  resizeTimeout = setTimeout(() => {
+    initPinEffect()
+    ScrollTrigger.refresh()
+  }, 200)
+}
+
+onMounted(() => {
+  // 等待 DOM 和 GSAP plugin 完全初始化
+  setTimeout(() => {
+    initPinEffect()
+    ScrollTrigger.refresh()
+  }, 100)
+
+  // 監聽 resize 事件
+  window.addEventListener('resize', handleResize)
 })
 
-const floatingTags = [
+onBeforeUnmount(() => {
+  cleanupAnimations()
+  window.removeEventListener('resize', handleResize)
+  if (resizeTimeout) {
+    clearTimeout(resizeTimeout)
+  }
+})
+
+const floatingTags = computed(() => [
   {
     text: 'FRONTEND',
     position: {
-      top: '20%',
-      left: '-47%',
+      default: { top: '-35%', left: '5%' },
+      md: { top: '-22%', left: '-10%' },
+      xl: { top: '20%', left: '-42%' },
     },
   },
   {
     text: 'BACKEND',
     position: {
-      bottom: '-3%',
-      left: '-27%',
+      default: { bottom: '-17.5%', left: '6.5%' },
+      md: { bottom: '-15%', left: '10%' },
+      xl: { bottom: '-3%', left: '-27%' },
     },
   },
   {
     text: 'DEVOPS',
     position: {
-      bottom: '-20%',
-      right: '20%',
+      default: { bottom: '-25%', right: '6.5%' },
+      md: { bottom: '-20%', right: '10%' },
+      xl: { bottom: '-18%', right: '20%' },
     },
   },
   {
     text: 'UI / UX',
     position: {
-      right: '-10%',
-      top: '-5%',
+      default: { right: '35%', top: '-17.5%' },
+      md: { right: '30%', top: '-12.5%' },
+      xl: { right: '-5%', top: '-5%' },
     },
   },
   {
     text: 'AGILE',
     position: {
-      right: '-60%',
-      top: '50%',
+      default: { right: '5%', top: '-27.5%' },
+      md: { right: '-15%', top: '-28%' },
+      xl: { right: '-47%', top: '50%' },
     },
   },
-]
+])
+
+function getResponsivePosition(tagPosition: any) {
+  if (width.value >= 1280 && tagPosition.xl) {
+    return tagPosition.xl
+  }
+  else if (width.value >= 768 && tagPosition.md) {
+    return tagPosition.md
+  }
+  return tagPosition.default
+}
 </script>
 
 <template>
   <ShareGradientDotsCard
     ref="aboutCardRef"
-    class="absolute left-1/2 top-60 z-10 mt-60 -translate-x-1/2 -translate-y-1/2 text-center text-white sm:max-w-[440px] lg:max-w-[640px]"
+    class="relative z-10 mx-auto text-center text-white sm:absolute sm:top-60 sm:mt-60 sm:max-w-[440px] md:max-w-[524px] xl:max-w-[640px]"
   >
     <div class="mx-auto inline-block py-[6px]">
       <h2 class="mx-10 flex text-h3-40">
@@ -88,20 +163,18 @@ const floatingTags = [
     </p>
 
     <ShareLinkButton
-      to="/"
+      to="/agenda"
       class="mt-[60px]"
     >
       議程資訊
     </ShareLinkButton>
 
-    <div>
-      <HomeAboutFloatingTag
-        v-for="tag in floatingTags"
-        :key="tag.text"
-        :text="tag.text"
-        :position="tag.position"
-        class="floating-tag absolute"
-      />
-    </div>
+    <HomeAboutFloatingTag
+      v-for="tag in floatingTags"
+      :key="tag.text"
+      :text="tag.text"
+      :position="getResponsivePosition(tag.position)"
+      class="floating-tag absolute"
+    />
   </ShareGradientDotsCard>
 </template>

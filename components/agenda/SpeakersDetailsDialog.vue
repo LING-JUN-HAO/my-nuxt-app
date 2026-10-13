@@ -5,7 +5,7 @@ import type {
   SpeakerDialogIntro,
 } from '#components'
 import type { ContentCollectionItem } from '@nuxt/content'
-import { onKeyStroke } from '@vueuse/core'
+import { onKeyStroke, useBreakpoints, useTimeoutFn } from '@vueuse/core'
 import { BACK_LINKS } from '~/constants/agenda'
 
 const props = withDefaults(
@@ -42,7 +42,7 @@ const isAutoPlaying = ref(false)
 const isAnimating = ref(false)
 const currentPageNumber = ref(0)
 const speakerRef = computed(() => props.speaker)
-const { renderableIntroSection, speakerInfo, meta, formattedDate }
+const { renderableIntroSections, speakerInfo, meta, formattedDate }
   = useSpeakerSections(speakerRef, currentPageNumber)
 
 useSpeakerSeo(props.speaker, props.speakerIds, props.type)
@@ -63,6 +63,33 @@ const pageNumber = computed(() => {
 })
 
 let autoPlayTween: gsap.core.Tween | null = null
+
+// 講者圖片滑動的時間（秒）
+const IMAGE_SLIDE_DURATION = 0.8
+// 講者介紹滑到邊緣時的透明度
+const CONTENT_EDGE_OPACITY = 0.4
+
+// 觸控或捲動停止後，等待多久再恢復自動播放（毫秒）
+const TOUCH_RESUME_DELAY = 5000
+// 滑鼠停在內容區
+const isHoveringContent = ref(false)
+// 觸控或捲動中（停止後經過 TOUCH_RESUME_DELAY 才解除）
+const isTouchInteracting = ref(false)
+// 重複呼叫 start() 會重新計時；元件卸載時自動清除
+const { start: scheduleTouchResume } = useTimeoutFn(
+  () => {
+    isTouchInteracting.value = false
+    startAutoPlay()
+  },
+  TOUCH_RESUME_DELAY,
+  { immediate: false },
+)
+
+// 行動裝置版面（圖片與介紹上下排列）
+const breakpoints = useBreakpoints({
+  lg: 1024,
+})
+const isMobileLayout = breakpoints.smaller('lg')
 
 /* 處理關閉彈出視窗 */
 function handleClose() {
@@ -86,8 +113,7 @@ function resetRoute() {
 
 /* 取得目前顯示圖片的容器(行動裝置 or 桌機) */
 function getActiveImageContainer() {
-  const isMobile = window.innerWidth < 1024
-  if (isMobile) {
+  if (isMobileLayout.value) {
     return mobileImageComponentRef.value?.mobileImageContainerRef || null
   }
   else {
@@ -95,7 +121,7 @@ function getActiveImageContainer() {
   }
 }
 
-/* 動畫切換內容 - 只負責內容淡入淡出 */
+/* 動畫切換內容 */
 function animateContentTransition(nextIndex: number, type: 'next' | 'prev') {
   if (isAnimating.value)
     return
@@ -115,6 +141,93 @@ function animateContentTransition(nextIndex: number, type: 'next' | 'prev') {
     return
   }
 
+  const contentEl = speakerDialogIntroComponentRef.value.contentRef
+  if (isMobileLayout.value) {
+    animateContentSlide(contentEl, nextIndex, type)
+  }
+  else {
+    animateContentFade(contentEl, nextIndex, type)
+  }
+}
+
+/* 手機版：文字跟著圖片滑動 */
+function animateContentSlide(
+  contentEl: HTMLElement,
+  nextIndex: number,
+  type: 'next' | 'prev',
+) {
+  // 文字跟著圖片往同一個方向滑：滑出、滑入各占圖片滑動時間的一半，兩者同時開始、同時結束。
+  // 不讓整塊文字淡到全透明，手機版上下排列時那樣看起來會像閃爍
+  const halfDuration = IMAGE_SLIDE_DURATION / 2
+  // 下一位往左滑出、從右邊滑入；上一位相反
+  const direction = type === 'next' ? -1 : 1
+
+  const tl = gsap.timeline({
+    onComplete: () => {
+      isAnimating.value = false
+    },
+  })
+
+  // 啟動圖片動畫
+  tl.call(
+    () => {
+      if (type === 'next') {
+        animateImageTransition(nextIndex)
+      }
+      else {
+        animateImageTransitionReverse(nextIndex)
+      }
+    },
+    [],
+    0,
+  )
+
+  // 內容滑出
+  tl.to(
+    contentEl,
+    {
+      xPercent: 100 * direction,
+      opacity: CONTENT_EDGE_OPACITY,
+      duration: halfDuration,
+      ease: 'power2.in',
+    },
+    0,
+  )
+
+  // 圖片滑到一半時更新內容資料
+  tl.call(
+    () => {
+      currentPageNumber.value = nextIndex
+    },
+    [],
+    halfDuration,
+  )
+
+  // 新內容從另一側滑入
+  tl.fromTo(
+    contentEl,
+    {
+      xPercent: -100 * direction,
+      opacity: CONTENT_EDGE_OPACITY,
+    },
+    {
+      xPercent: 0,
+      opacity: 1,
+      duration: halfDuration,
+      ease: 'power2.out',
+      // 在時間軸中預設會立刻套用起始值，要等滑出結束才套用
+      immediateRender: false,
+    },
+    halfDuration,
+  )
+}
+
+/* 桌機版：文字淡出後切換圖片，再淡入 */
+function animateContentFade(
+  contentEl: HTMLElement,
+  nextIndex: number,
+  type: 'next' | 'prev',
+) {
   const tl = gsap.timeline({
     onComplete: () => {
       isAnimating.value = false
@@ -122,7 +235,7 @@ function animateContentTransition(nextIndex: number, type: 'next' | 'prev') {
   })
 
   // 內容淡出
-  tl.to(speakerDialogIntroComponentRef.value.contentRef, {
+  tl.to(contentEl, {
     opacity: 0,
     duration: 0.3,
     ease: 'power2.out',
@@ -140,7 +253,7 @@ function animateContentTransition(nextIndex: number, type: 'next' | 'prev') {
   })
 
   // 內容淡入
-  tl.to(speakerDialogIntroComponentRef.value.contentRef, {
+  tl.to(contentEl, {
     opacity: 1,
     duration: 0.3,
     ease: 'power2.in',
@@ -194,7 +307,7 @@ function animateImageTransition(targetIndex: number) {
   // 向左滑動
   tl.to(container, {
     x: '-100%',
-    duration: 0.8,
+    duration: IMAGE_SLIDE_DURATION,
     ease: 'power2.inOut',
   })
 }
@@ -227,7 +340,7 @@ function animateImageTransitionReverse(targetIndex: number) {
   // 向右滑動到 0
   tl.to(container, {
     x: 0,
-    duration: 0.8,
+    duration: IMAGE_SLIDE_DURATION,
     ease: 'power2.inOut',
   })
 }
@@ -236,7 +349,11 @@ function animateImageTransitionReverse(targetIndex: number) {
 function startAutoPlay() {
   if (!props.speaker || props.speaker.length <= 1)
     return
+  // 使用者還在操作時不啟動，等操作結束再由對應的處理函式恢復
+  if (isHoveringContent.value || isTouchInteracting.value)
+    return
 
+  pauseAutoPlay()
   isAutoPlaying.value = true
 
   autoPlayTween = gsap.delayedCall(5, () => {
@@ -255,16 +372,27 @@ function pauseAutoPlay() {
   }
 }
 
-/* 處理滑鼠進入內容區 */
-function handleMouseEnterContent() {
+/* 處理滑鼠進入內容區（觸控模擬出來的事件不算，交給觸控處理） */
+function handlePointerEnterContent(event: PointerEvent) {
+  if (event.pointerType !== 'mouse')
+    return
+  isHoveringContent.value = true
   pauseAutoPlay()
 }
 
 /* 處理滑鼠離開內容區 */
-function handleMouseLeaveContent() {
-  if (props.speaker && props.speaker.length > 1) {
-    startAutoPlay()
-  }
+function handlePointerLeaveContent(event: PointerEvent) {
+  if (event.pointerType !== 'mouse')
+    return
+  isHoveringContent.value = false
+  startAutoPlay()
+}
+
+/* 處理觸控與捲動：暫停自動播放，停止操作一段時間後再恢復 */
+function handleTouchInteraction() {
+  isTouchInteracting.value = true
+  pauseAutoPlay()
+  scheduleTouchResume()
 }
 
 /** 處理 ESC 關閉事件監聽 */
@@ -302,6 +430,8 @@ onUnmounted(() => {
     data-lenis-prevent
     class="fixed inset-0 z-40 flex h-dvh flex-col overflow-y-auto bg-black/80 pt-[47px] opacity-0 scrollbar-none xs:pt-[55px] sm:pt-[57px] lg:flex-row lg:pt-[55px]"
     @keyup.esc="handleClose"
+    @touchstart.passive="handleTouchInteraction"
+    @scroll.capture.passive="handleTouchInteraction"
   >
     <AgendaFloatingBlocks />
 
@@ -328,9 +458,9 @@ onUnmounted(() => {
       ></div>
       <!-- 主要內容區塊 -->
       <div
-        class="flex h-[calc(100%-72px)] flex-col lg:h-[calc(100%-76px)] lg:flex-row"
-        @mouseenter="handleMouseEnterContent"
-        @mouseleave="handleMouseLeaveContent"
+        class="flex h-[calc(100%-72px)] flex-col overflow-x-clip lg:h-[calc(100%-76px)] lg:flex-row lg:overflow-x-visible"
+        @pointerenter="handlePointerEnterContent"
+        @pointerleave="handlePointerLeaveContent"
       >
         <!-- 講者圖片區塊(手機版) -->
         <SpeakerDialogImageMobile
@@ -345,7 +475,7 @@ onUnmounted(() => {
           ref="speakerDialogIntroComponentRef"
           :meta="meta"
           :speaker="speaker"
-          :renderable-intro-section="renderableIntroSection"
+          :renderable-intro-sections="renderableIntroSections"
           :current-page-number="currentPageNumber"
         />
         <!-- 議程大綱區塊 -->
